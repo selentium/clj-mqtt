@@ -1,6 +1,11 @@
 (ns clj-mqtt.core-test
   (:require [clojure.test :refer :all]
-            [clj-mqtt.core :refer :all]))
+            [clj-mqtt.core :refer :all]
+            [gloss.io :as io]
+            [gloss.core :as gloss]
+            [gloss.core.formats :as f]
+            [gloss.data.bytes.core :as bs]
+            [byte-streams]))
 
 
 (deftest test-integer->variant
@@ -17,3 +22,19 @@
     (is (= 128 (variant->integer [128 1])))
     (is (= 16384 (variant->integer [128 128 1])))
     (is (= 2097152 (variant->integer [128 128 128 1])))))
+
+(def varint-frame
+  (gloss/compile-frame [(varint)]))
+
+(deftest test-varint-codec
+  (testing "VBI decode"
+    (is (= [32] (io/decode varint-frame (f/to-byte-buffer [32]))))
+    (is (= [128] (io/decode varint-frame (f/to-byte-buffer [128 1]))))
+    (is (= [16384] (io/decode varint-frame (f/to-byte-buffer [128 128 1]))))
+    (is (= [2097152] (io/decode varint-frame (f/to-byte-buffer [128 128 128 1])))))
+  (testing "VBI encode"
+    (is (= (byte-streams/bytes= (f/to-byte-buffer [32]))  (io/encode varint-frame 32)))
+    (is (= (byte-streams/bytes= (f/to-byte-buffer [128 1]))  (io/encode varint-frame 128)))
+    (is (= (byte-streams/bytes= (f/to-byte-buffer [128 128 1]))  (io/encode varint-frame 16384)))
+    (is (= (byte-streams/bytes= (f/to-byte-buffer [128 128 128 1]))  (io/encode varint-frame 2097152)))))
+

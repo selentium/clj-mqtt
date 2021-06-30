@@ -7,7 +7,8 @@
    [aleph.tcp :as tcp]
    [gloss.core :as gloss]
    [gloss.io :as io]
-   [byte-streams :as bs]))
+   [byte-streams :as bs]
+   [gloss.core.protocols :as protocols]))
 
 (defn -main
   "I don't do a whole lot ... yet."
@@ -51,4 +52,9 @@
             rb (rest remaining-bytes)
             v (+ value (* mul (bit-and eb 127)))]
         (recur mul eb rb v)))))
+
+
+(defn varint [])
+
+
 
