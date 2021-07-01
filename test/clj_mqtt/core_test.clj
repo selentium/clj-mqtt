@@ -5,7 +5,8 @@
             [gloss.core :as gloss]
             [gloss.core.formats :as f]
             [gloss.data.bytes.core :as bs]
-            [byte-streams]))
+            [byte-streams]
+            [gloss.data.bytes :as db]))
 
 
 (deftest test-integer->variant
@@ -23,18 +24,18 @@
     (is (= 16384 (variant->integer [128 128 1])))
     (is (= 2097152 (variant->integer [128 128 128 1])))))
 
-(def varint-frame
-  (gloss/compile-frame [(varint)]))
+
 
 (deftest test-varint-codec
   (testing "VBI decode"
-    (is (= [32] (io/decode varint-frame (f/to-byte-buffer [32]))))
-    (is (= [128] (io/decode varint-frame (f/to-byte-buffer [128 1]))))
-    (is (= [16384] (io/decode varint-frame (f/to-byte-buffer [128 128 1]))))
-    (is (= [2097152] (io/decode varint-frame (f/to-byte-buffer [128 128 128 1])))))
+    (is (= 32 (io/decode varint (f/to-byte-buffer (map unchecked-byte [32])))))
+    (is (= 128 (io/decode varint (f/to-byte-buffer (map unchecked-byte [128 1])))))
+    (is (= 16384 (io/decode varint (f/to-byte-buffer (map unchecked-byte [128 128 1])))))
+    (is (= 2097152 (io/decode varint (f/to-byte-buffer (map unchecked-byte [128 128 128 1]))))))
   (testing "VBI encode"
-    (is (= (byte-streams/bytes= (f/to-byte-buffer [32]))  (io/encode varint-frame 32)))
-    (is (= (byte-streams/bytes= (f/to-byte-buffer [128 1]))  (io/encode varint-frame 128)))
-    (is (= (byte-streams/bytes= (f/to-byte-buffer [128 128 1]))  (io/encode varint-frame 16384)))
-    (is (= (byte-streams/bytes= (f/to-byte-buffer [128 128 128 1]))  (io/encode varint-frame 2097152)))))
+    (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [32])) (io/encode varint 32) ))
+    (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [128 1]))   (io/encode varint 128)))
+    (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [128 128 1])) (io/encode varint 16384)))
+    (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [128 128 128 1])) (io/encode varint 2097152)))))
 
+  
