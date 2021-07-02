@@ -2,11 +2,8 @@
   (:require [clojure.test :refer :all]
             [clj-mqtt.varint :refer :all]
             [gloss.io :as io]
-            [gloss.core :as gloss]
             [gloss.core.formats :as f]
-            [gloss.data.bytes.core :as bs]
-            [byte-streams]
-            [gloss.data.bytes :as db]))
+            [byte-streams]))
 
 
 (deftest test-integer->variant

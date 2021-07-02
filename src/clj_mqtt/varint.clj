@@ -30,7 +30,6 @@
         (let [enc (encode-byte x)]
           (recur (first enc) (last enc) (conj result (last enc))))))))
 
-(+ 5 1)
 
 (defn variant->integer [bs]
   (loop [multiplier 1
