@@ -12,6 +12,8 @@
 
 (def string (gloss/finite-frame two-byte-int (gloss/string :utf-8)))
 
+(def string-pair [string string])
+
 (def binary
   (gloss/finite-block two-byte-int))
 
@@ -21,7 +23,7 @@
   (gloss/compile-frame
    (gloss/bit-map :packet-type 4 :flags 4)))
 
-(def packet-types [
+(defonce packet-types [
                    [:reserved 0 :forbidden]
                    [:connect 1 :client-server]
                    [:connack 2 :server-client]
@@ -66,3 +68,50 @@
          (assoc result (second fst) {:value (second fst), :direction (nth fst 2), :name (first fst)}))))))
 
 (def packet-types-by-value (packet-types-by-value-))
+
+(def fixed-header-remaining-bytes varint)
+
+
+;;;variable header
+(def packet-identifier two-byte-int)
+
+(def packet-types-requiring-packet-identifier #{:publish :puback :pubrec :pubrel :pubcomp :subscribe :suback :unsibscribe :unsuback})
+
+(defn requires-packet-identifier? [packet-type]
+  (contains? packet-types-requiring-packet-identifier packet-type))
+
+
+(defonce properties [
+                 [1 :payload-format-indicator :byte #{:publish :will}]
+                 [2 :message-expiry-interval four-byte-int #{:publish :will}]
+                 [3 :content-type string #{:publish :will}]
+                 [8 :response-topic string #{:publish :will}]
+                 [9 :correlation-data binary #{:publish :will}]
+                 [11 :subscription-identifier varint #{:publish :subscribe}]
+                 [17 :session-expiry-interval four-byte-int #{:connect :connack :disconnect}]
+                 [18 :assigned-client-identifier string #{:connack}]
+                 [19 :server-keep-alive two-byte-int #{:connack}]
+                 [21 :authentication-method string #{:connect :connack :auth}]
+                 [22 :authentication-data binary #{:connect :connack :auth}]
+                 [23 :request-problem-information :byte #{:connect}]
+                 [24 :will-delay-interval four-byte-int #{:will}]
+                 [25 :request-response-information :byte #{:connect}]
+                 [26 :response-information string #{:connack}]
+                 [28 :server-reference string #{:connack :disconnect}]
+                 [31 :reason-string string #{:connack :puback :pubrec :pubrel :pubcomp :suback :unsuback :disconnect :auth}]
+                 [33 :receive-maximum two-byte-int #{:connect :connack}]
+                 [34 :topic-alias-maximum two-byte-int #{:connect :connack}]
+                 [35 :topic-alias two-byte-int #{:publish}]
+                 [36 :max-qos :byte #{:connack}]
+                 [37 :retain-available :byte #{:connack}]
+                 [38 :user-property string-pair #{:connect :connack :publish :will :puback :pubrec :pubrel :pubcomp :subscribe :suback :unsubscribe :unsuback :disconnect :auth}]
+                 [39 :maximum-packet-size four-byte-int #{:connect :connack}]
+                 [40 :wildcard-subscription-available :byte #{:connack}]
+                 [41 :subscription-identifier-available :byte #{:connack}]
+                 [42 :shared-subscription-available :byte #{:connack}]
+])
+
+(defn property-name->value []
+  (into {} (map (fn [item]
+                  [(second item) (first item)]) properties)))
+
