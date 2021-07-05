@@ -143,3 +143,25 @@
   (gloss/compile-frame
    (gloss/finite-frame varint
                        (gloss/repeated prop :prefix :none))))
+
+
+(def reason-codes [
+                   [0 :success #{:connack :puback :pubrec :pubrel :pubcomp :unsuback :auth :disconnect :suback}]
+                   [1 :granted-qos1 #{:suback}]
+                   [2 :granted-qos2 #{:suback}]
+                   [4 :disconnect-with-will-message #{:disconnect}]
+                   [16 :no-matching-subscribers #{:puback :pubrec}]
+                   [17 :no-subscription-existed #{:unsuback}]
+                   [24 :continue-authentication #{:auth}]
+                   [25 :re-authenticate #{:auth}]
+                   [-128 :unspecified-error #{:connack :puback :pubrec :suback :unsuback :disconnect}]
+                   [-127 :malformed-packet #{:connack :disconnect}]
+                   [-126 :protocol-error #{:connack :disconnect}]
+                   [-125 :implementation-specific-error #{:connack :puback :pubrec :suback :unsuback :diasconnect}]
+                   [-124 :unsupported-protocol-version #{:connack}]
+                   [-123 :client-identifier-not-valid #{:connack}]
+                   [-122 :bad-username-or-password #{:connack}]
+                   [-121 :not-authorized #{:connack :puback :pubrec :suback :unsuback :disconnect}]
+                   [-120 :server-unavailable #{:connack}]
+])
+
