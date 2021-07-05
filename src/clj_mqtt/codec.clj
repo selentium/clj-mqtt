@@ -111,7 +111,35 @@
                  [42 :shared-subscription-available :byte #{:connack}]
 ])
 
-(defn property-name->value []
+(defn- property-name->value []
   (into {} (map (fn [item]
                   [(second item) (first item)]) properties)))
 
+(defn- property-name->codec []
+  (into {} (map (fn [item]
+                  [(second item) (nth item 2)]) properties)))
+
+(defn prop-value-codec [name]
+  (let [codecs-map (property-name->codec)]
+    {:name name :value (name codecs-map)}))
+
+
+
+
+;made it as byte to make gloss happy
+;MQTT spec says it should be VBI
+(def prop-name
+  (gloss/compile-frame
+   (gloss/enum :byte (property-name->value))))
+
+(def prop 
+  (gloss/compile-frame
+   (gloss/header
+    prop-name
+    prop-value-codec
+    :name)))
+
+(def properties-codec
+  (gloss/compile-frame
+   (gloss/finite-frame varint
+                       (gloss/repeated prop :prefix :none))))
