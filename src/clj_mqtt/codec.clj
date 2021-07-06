@@ -196,3 +196,22 @@
    (gloss/enum :byte (into {}
                            (map (fn [rc] [(second rc) (first rc)] ) reason-codes)))))
 
+
+(def payload-requirements {
+                           :connect :required
+                           :connack :none 
+                           :publish :optional 
+                           :puback :none
+                           :pubrec :none
+                           :pubrel :none
+                           :pubcomp :none
+                           :subscribe :required
+                           :suback :required
+                           :unsubscribe :required
+                           :unsuback :required
+                           :pingreq :none
+                           :pingresp :none
+                           :disconnect :none
+                           :auth :none
+
+})
