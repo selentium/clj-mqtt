@@ -163,5 +163,36 @@
                    [-122 :bad-username-or-password #{:connack}]
                    [-121 :not-authorized #{:connack :puback :pubrec :suback :unsuback :disconnect}]
                    [-120 :server-unavailable #{:connack}]
+                   [-119 :server-busy #{:connack :disconnect}]
+                   [-118 :banned #{:connack}]
+                   [-117 :server-shutting-down #{:disconnect}]
+                   [-116 :bad-authentication-method #{:connack :disconnect}]
+                   [-115 :keep-alive-timeout #{:disconnect}]
+                   [-114 :session-taken-over #{:disconnect}]
+                   [-113 :topic-filter-invalid #{:suback :unsuback :disconnect}]
+                   [-112 :topic-name-invalid #{:connack :puback :pubrec :disconnect}]
+                   [-111 :packet-identifier-in-use #{:puback :pubrec :suback :unsiback}]
+                   [-110 :packet-identifier-not-found #{:pubrel :pubcomp}]
+                   [-109 :receive-maximum-exceeded #{:disconnect}]
+                   [-108 :topic-alias-invalid #{:disconnect}]
+                   [-107 :packet-too-large #{:connack :disconnect}]
+                   [-106 :message-rate-too-high #{:disconnect}]
+                   [-105 :quota-exceeded #{:connack :puback :pubrec :suback :disconnect}]
+                   [-104 :administrative-action #{:disconnect}]
+                   [-103 :payload-format-invalid #{:connack :puback :pubrec :disconnect}]
+                   [-102 :retain-not-supported #{:connack :disconnect}]
+                   [-101 :qos-not-supported #{:connack :disconnect}]
+                   [-100 :use-another-server #{:connack :disconnect}]
+                   [-99 :server-moved #{:connack :disconnect}]
+                   [-98 :shared-subscriptions-not-supported #{:suback :disconnect}]
+                   [-97 :connection-rate-exceeded #{:connack :disconnect}]
+                   [-96 :maximum-connect-time #{:disconnect}]
+                   [-95 :subscription-identifiers-not-supported #{:suback :disconnect}]
+                   [-94 :wildcard-subscriptions-not-supported #{:suback :disconnect}]
 ])
+
+(def reason-codes-codec
+  (gloss/compile-frame
+   (gloss/enum :byte (into {}
+                           (map (fn [rc] [(second rc) (first rc)] ) reason-codes)))))
 
