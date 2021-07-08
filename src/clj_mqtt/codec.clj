@@ -118,7 +118,7 @@
 
 (defn prop-value-codec [name]
   (let [codecs-map (property-name->codec)]
-    {:name name :value (name codecs-map)}))
+    (gloss/compile-frame {:name name :value (name codecs-map)})))
 
 
 
@@ -138,7 +138,7 @@
 
 (def properties-codec
   (gloss/compile-frame
-   (gloss/finite-frame varint
+   (gloss/finite-frame :byte
                        (gloss/repeated prop :prefix :none))))
 
 
