@@ -1,8 +1,6 @@
 (ns clj-mqtt.codec
   (:require
    [gloss.core :as gloss]
-   [gloss.core.formats :as f]
-   [gloss.io :as io]
    [clj-mqtt.varint :refer [varint]]))
 
 ;;;primitives
@@ -18,58 +16,59 @@
   (gloss/finite-block two-byte-int))
 
 
+
+
+
+
+
 ;;;fixed header
-(def fixed-header-first-byte 
+
+
+(defonce packet-types [[:reserved 0 :forbidden]
+                       [:connect 1 :client-server]
+                       [:connack 2 :server-client]
+                       [:publish 3 :both]
+                       [:puback 4 :both]
+                       [:pubrec 5 :both]
+                       [:pubrel 6 :both]
+                       [:pubcomp 7 :both]
+                       [:subscribe 8 :client-server]
+                       [:suback 9 :server-client]
+                       [:unsubscribe 10 :client-server]
+                       [:unsuback 11 :server-client]
+                       [:pingreq 12 :client-server]
+                       [:pingresp 12 :server-client]
+                       [:disconnect 14 :both]
+                       [:auth 15 :both]])
+
+(def packet-types-name->value
+  (into {}
+        (map (fn [item]
+               [(first item) (second item)]) packet-types)))
+
+(def packet-types-value->name
+  (into {}
+        (map (fn [item]
+               [(second item) (first item)]) packet-types)))
+
+(def fixed-header-first-byte
   (gloss/compile-frame
-   (gloss/bit-map :packet-type 4 :flags 4)))
-
-(defonce packet-types [
-                   [:reserved 0 :forbidden]
-                   [:connect 1 :client-server]
-                   [:connack 2 :server-client]
-                   [:publish 3 :both]
-                   [:puback 4 :both]
-                   [:pubrec 5 :both]
-                   [:pubrel 6 :both]
-                   [:pubcomp 7 :both]
-                   [:subscribe 8 :client-server]
-                   [:suback 9 :server-client]
-                   [:unsubscribe 10 :client-server]
-                   [:unsuback 11 :server-client]
-                   [:pingreq 12 :client-server]
-                   [:pingresp 12 :server-client]
-                   [:disconnect 14 :both]
-                   [:auth 15 :both]])
-
-(defn- packet-types-by-name- []
-  (let [pt packet-types]
-    (loop [fst (first pt)
-           rst (rest pt)
-           result {}]
-      (if (= 0 (count rst))
-        result
-        (recur 
-         (first rst)
-         (rest rst)
-         (assoc result (first fst) {:value (second fst), :direction (nth fst 2), :name (first fst)}))))))
-
-(def packet-types-by-name (packet-types-by-name-))
-
-(defn- packet-types-by-value- []
-  (let [pt packet-types]
-    (loop [fst (first pt)
-           rst (rest pt)
-           result {}]
-      (if (= 0 (count rst))
-        result
-        (recur
-         (first rst)
-         (rest rst)
-         (assoc result (second fst) {:value (second fst), :direction (nth fst 2), :name (first fst)}))))))
-
-(def packet-types-by-value (packet-types-by-value-))
+   (gloss/bit-map :packet-type 4 :flags 4)
+   (fn [pre-encoded]
+     (let [kw-packet-type (:packet-type pre-encoded)
+           num-packet-type (kw-packet-type packet-types-name->value)]
+       (assoc pre-encoded :packet-type num-packet-type)))
+   (fn [decoded]
+     (let [num-packet-type (:packet-type decoded)
+           kw-packet-type (get packet-types-value->name num-packet-type)]
+       (assoc decoded :packet-type kw-packet-type)))))
 
 (def fixed-header-remaining-bytes varint)
+
+(def fixed-header
+  (gloss/compile-frame
+   (gloss/ordered-map :first-byte fixed-header-first-byte
+                      :remaining-length fixed-header-remaining-bytes)))
 
 
 ;;;variable header
@@ -81,35 +80,33 @@
   (contains? packet-types-requiring-packet-identifier packet-type))
 
 
-(defonce properties [
-                 [1 :payload-format-indicator :byte #{:publish :will}]
-                 [2 :message-expiry-interval four-byte-int #{:publish :will}]
-                 [3 :content-type string #{:publish :will}]
-                 [8 :response-topic string #{:publish :will}]
-                 [9 :correlation-data binary #{:publish :will}]
-                 [11 :subscription-identifier varint #{:publish :subscribe}]
-                 [17 :session-expiry-interval four-byte-int #{:connect :connack :disconnect}]
-                 [18 :assigned-client-identifier string #{:connack}]
-                 [19 :server-keep-alive two-byte-int #{:connack}]
-                 [21 :authentication-method string #{:connect :connack :auth}]
-                 [22 :authentication-data binary #{:connect :connack :auth}]
-                 [23 :request-problem-information :byte #{:connect}]
-                 [24 :will-delay-interval four-byte-int #{:will}]
-                 [25 :request-response-information :byte #{:connect}]
-                 [26 :response-information string #{:connack}]
-                 [28 :server-reference string #{:connack :disconnect}]
-                 [31 :reason-string string #{:connack :puback :pubrec :pubrel :pubcomp :suback :unsuback :disconnect :auth}]
-                 [33 :receive-maximum two-byte-int #{:connect :connack}]
-                 [34 :topic-alias-maximum two-byte-int #{:connect :connack}]
-                 [35 :topic-alias two-byte-int #{:publish}]
-                 [36 :max-qos :byte #{:connack}]
-                 [37 :retain-available :byte #{:connack}]
-                 [38 :user-property string-pair #{:connect :connack :publish :will :puback :pubrec :pubrel :pubcomp :subscribe :suback :unsubscribe :unsuback :disconnect :auth}]
-                 [39 :maximum-packet-size four-byte-int #{:connect :connack}]
-                 [40 :wildcard-subscription-available :byte #{:connack}]
-                 [41 :subscription-identifier-available :byte #{:connack}]
-                 [42 :shared-subscription-available :byte #{:connack}]
-])
+(defonce properties [[1 :payload-format-indicator :byte #{:publish :will}]
+                     [2 :message-expiry-interval four-byte-int #{:publish :will}]
+                     [3 :content-type string #{:publish :will}]
+                     [8 :response-topic string #{:publish :will}]
+                     [9 :correlation-data binary #{:publish :will}]
+                     [11 :subscription-identifier varint #{:publish :subscribe}]
+                     [17 :session-expiry-interval four-byte-int #{:connect :connack :disconnect}]
+                     [18 :assigned-client-identifier string #{:connack}]
+                     [19 :server-keep-alive two-byte-int #{:connack}]
+                     [21 :authentication-method string #{:connect :connack :auth}]
+                     [22 :authentication-data binary #{:connect :connack :auth}]
+                     [23 :request-problem-information :byte #{:connect}]
+                     [24 :will-delay-interval four-byte-int #{:will}]
+                     [25 :request-response-information :byte #{:connect}]
+                     [26 :response-information string #{:connack}]
+                     [28 :server-reference string #{:connack :disconnect}]
+                     [31 :reason-string string #{:connack :puback :pubrec :pubrel :pubcomp :suback :unsuback :disconnect :auth}]
+                     [33 :receive-maximum two-byte-int #{:connect :connack}]
+                     [34 :topic-alias-maximum two-byte-int #{:connect :connack}]
+                     [35 :topic-alias two-byte-int #{:publish}]
+                     [36 :max-qos :byte #{:connack}]
+                     [37 :retain-available :byte #{:connack}]
+                     [38 :user-property string-pair #{:connect :connack :publish :will :puback :pubrec :pubrel :pubcomp :subscribe :suback :unsubscribe :unsuback :disconnect :auth}]
+                     [39 :maximum-packet-size four-byte-int #{:connect :connack}]
+                     [40 :wildcard-subscription-available :byte #{:connack}]
+                     [41 :subscription-identifier-available :byte #{:connack}]
+                     [42 :shared-subscription-available :byte #{:connack}]])
 
 (defn- property-name->value []
   (into {} (map (fn [item]
@@ -132,7 +129,7 @@
   (gloss/compile-frame
    (gloss/enum :byte (property-name->value))))
 
-(def prop 
+(def prop
   (gloss/compile-frame
    (gloss/header
     prop-name
@@ -145,8 +142,7 @@
                        (gloss/repeated prop :prefix :none))))
 
 
-(def reason-codes [
-                   [0 :success #{:connack :puback :pubrec :pubrel :pubcomp :unsuback :auth :disconnect :suback}]
+(def reason-codes [[0 :success #{:connack :puback :pubrec :pubrel :pubcomp :unsuback :auth :disconnect :suback}]
                    [1 :granted-qos1 #{:suback}]
                    [2 :granted-qos2 #{:suback}]
                    [4 :disconnect-with-will-message #{:disconnect}]
@@ -188,19 +184,17 @@
                    [-97 :connection-rate-exceeded #{:connack :disconnect}]
                    [-96 :maximum-connect-time #{:disconnect}]
                    [-95 :subscription-identifiers-not-supported #{:suback :disconnect}]
-                   [-94 :wildcard-subscriptions-not-supported #{:suback :disconnect}]
-])
+                   [-94 :wildcard-subscriptions-not-supported #{:suback :disconnect}]])
 
 (def reason-codes-codec
   (gloss/compile-frame
    (gloss/enum :byte (into {}
-                           (map (fn [rc] [(second rc) (first rc)] ) reason-codes)))))
+                           (map (fn [rc] [(second rc) (first rc)]) reason-codes)))))
 
 
-(def payload-requirements {
-                           :connect :required
-                           :connack :none 
-                           :publish :optional 
+(def payload-requirements {:connect :required
+                           :connack :none
+                           :publish :optional
                            :puback :none
                            :pubrec :none
                            :pubrel :none
@@ -212,6 +206,67 @@
                            :pingreq :none
                            :pingresp :none
                            :disconnect :none
-                           :auth :none
+                           :auth :none})
 
+;;; connect
+
+(def connect-variable-header
+  (gloss/compile-frame
+   (gloss/ordered-map
+    :packet-type :connect
+    :protocol-name string
+    :protocol-version :byte
+    :connect-flags (gloss/bit-map :username 1
+                                  :password 1
+                                  :will-retain 1
+                                  :will-qos 2
+                                  :will 1
+                                  :clean-start 1
+                                  :reserved 1)
+    :keep-alive two-byte-int
+    :props properties-codec)))
+
+
+(def connect-codec
+  (gloss/compile-frame
+   (gloss/header
+    connect-variable-header
+    (fn [header]
+      (if (get-in header [:connect-flags :will])
+        (gloss/ordered-map :variable-header header
+                           :client-id string
+                           :will-props properties-codec)
+        (gloss/ordered-map :variable-header header
+                           :client-id string)))
+    :variable-header)))
+
+
+
+
+;;;mqtt codec
+
+(def packet-type->codec {
+                         :connect connect-codec
 })
+
+(def mqtt-codec 
+  (gloss/compile-frame
+   (gloss/header
+    fixed-header-first-byte
+    (fn [header]
+      (gloss/finite-frame fixed-header-remaining-bytes
+                          (gloss/ordered-map :fixed-header-first-byte header
+                                             :variable-header-and-payload (packet-type->codec (:packet-type header)))))
+    :fixed-header-first-byte)))
+
+
+
+
+
+
+
+
+
+
+
+
