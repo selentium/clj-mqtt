@@ -135,3 +135,32 @@
     (is (bs/bytes= encoded (io/encode connect-variable-header plain)))
     (is (= plain (io/decode connect-variable-header encoded)))))
 
+
+(deftest test-connect-codec
+  (let [plain {:variable-header {:packet-type :connect
+                                 :protocol-name "MQTT"
+                                 :protocol-version 5
+                                 :connect-flags {:username false
+                                                 :password true
+                                                 :will-retain true
+                                                 :will-qos 2
+                                                 :will true
+                                                 :clean-start true
+                                                 :reserved false}
+                                 :keep-alive 300
+                                 :props [{:name :payload-format-indicator :value 1}]}
+               :client-id "123"
+               :will-props [{:name :payload-format-indicator :value 1}]}
+        encoded [(f/to-byte-buffer [0 4]) 
+                 (f/to-byte-buffer [\M \Q \T \T])
+                 (f/to-byte-buffer [5])
+                 (f/to-byte-buffer [118])
+                 (f/to-byte-buffer [1 44])
+                 (f/to-byte-buffer [2])
+                 (f/to-byte-buffer [1 1])
+                 (f/to-byte-buffer [0 3])
+                 (f/to-byte-buffer [\1 \2 \3])
+                 (f/to-byte-buffer [2]) 
+                 (f/to-byte-buffer [1 1])]]
+    (is (= plain (io/decode connect-codec encoded)))))
+
