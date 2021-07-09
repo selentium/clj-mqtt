@@ -103,3 +103,35 @@
          (io/encode properties-codec plain)
          encoded))
     (is (= plain (io/decode properties-codec encoded)))))
+
+(deftest test-reason-code-codec
+  (let [plain :success
+        encoded (f/to-byte-buffer [0])]
+    (is (bs/bytes= encoded
+                   (io/encode reason-codes-codec plain)))
+    (is (= plain (io/decode reason-codes-codec encoded)))))
+
+
+(deftest test-connect-variable-header 
+  (let [plain {:packet-type :connect
+               :protocol-name "MQTT"
+               :protocol-version 5
+               :connect-flags {:username false
+                               :password true
+                               :will-retain true
+                               :will-qos 2
+                               :will true
+                               :clean-start true
+                               :reserved false}
+               :keep-alive 300
+               :props [{:name :payload-format-indicator :value 1}]}
+        encoded [(f/to-byte-buffer [0 4])
+                 (f/to-byte-buffer [\M \Q \T \T])
+                 (f/to-byte-buffer [5])
+                 (f/to-byte-buffer [118])
+                 (f/to-byte-buffer [1 44])
+                 (f/to-byte-buffer [2])
+                 (f/to-byte-buffer [1 1])]]
+    (is (bs/bytes= encoded (io/encode connect-variable-header plain)))
+    (is (= plain (io/decode connect-variable-header encoded)))))
+
