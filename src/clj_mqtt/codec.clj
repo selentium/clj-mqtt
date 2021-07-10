@@ -249,16 +249,46 @@
                          :connect connect-codec
 })
 
-(def mqtt-codec 
+(comment
+(def mqtt-codec
   (gloss/compile-frame
    (gloss/header
     fixed-header-first-byte
     (fn [header]
-      (gloss/finite-frame fixed-header-remaining-bytes
-                          (gloss/ordered-map :fixed-header-first-byte header
-                                             :variable-header-and-payload (packet-type->codec (:packet-type header)))))
-    :fixed-header-first-byte)))
+      (gloss/compile-frame
+       (gloss/finite-frame fixed-header-remaining-bytes
+                           (gloss/ordered-map :fixed-header-first-byte header
+                                              :variable-header-and-payload (packet-type->codec (:packet-type header))))))
+    :fixed-header-first-byte)))  
+  )
 
+
+(defn generate-body-codec [fixed-header-first-byte]
+  (gloss/compile-frame
+   (gloss/finite-frame varint (gloss/compile-frame (gloss/ordered-map
+                                                    :fixed-header-first-byte fixed-header-first-byte
+                                                    :variable-header-and-payload (packet-type->codec (:packet-type fixed-header-first-byte)))) )))
+
+
+
+
+
+(def dummy 
+  (gloss/compile-frame
+   (gloss/finite-frame 21 connect-codec)))
+
+
+(def mqtt-codec
+  (gloss/compile-frame
+   (gloss/header fixed-header-first-byte
+                 (fn [first-byte]
+                   (let [pt (:packet-type first-byte)
+                         cd (pt packet-type->codec)]
+                     (gloss/finite-frame varint
+                                         (gloss/ordered-map
+                                          :first-byte first-byte
+                                          :variable-header-and-payload cd))))
+                 :first-byte)))
 
 
 

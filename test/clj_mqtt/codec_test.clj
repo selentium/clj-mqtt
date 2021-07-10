@@ -9,13 +9,13 @@
 
 (deftest test-fixed-header-first-byte
   (testing "Encoding"
-    (is (bs/bytes= 
+    (is (bs/bytes=
          (io/encode
-          fixed-header-first-byte 
-          {:packet-type :connect :flags 0}) 
+          fixed-header-first-byte
+          {:packet-type :connect :flags 0})
          (f/to-byte-buffer [16]))))
   (testing "Decoding"
-    (is (= 
+    (is (=
          (io/decode fixed-header-first-byte (f/to-byte-buffer [16]))
          {:packet-type :connect :flags 0}))))
 
@@ -32,7 +32,7 @@
   (testing "Decoding"
     (is
      (= 4
-      (io/decode two-byte-int (f/to-byte-buffer [0 4]))))))
+        (io/decode two-byte-int (f/to-byte-buffer [0 4]))))))
 
 
 
@@ -47,8 +47,8 @@
      (= 4
         (io/decode four-byte-int (f/to-byte-buffer [0 0 0 4]))))))
 
-(deftest test-string 
-  (let [plain-string "mqtt" 
+(deftest test-string
+  (let [plain-string "mqtt"
         encoded-string [(f/to-byte-buffer [0 4])
                         (f/to-byte-buffer [\m \q \t \t])]]
     (testing "Encoding"
@@ -61,7 +61,7 @@
            (io/decode string encoded-string))))))
 
 
-(deftest test-string-pair 
+(deftest test-string-pair
   (let [plain ["key" "value"]
         encoded [(f/to-byte-buffer [0 3])
                  (f/to-byte-buffer [\k \e \y])
@@ -112,7 +112,7 @@
     (is (= plain (io/decode reason-codes-codec encoded)))))
 
 
-(deftest test-connect-variable-header 
+(deftest test-connect-variable-header
   (let [plain {:packet-type :connect
                :protocol-name "MQTT"
                :protocol-version 5
@@ -151,7 +151,7 @@
                                  :props [{:name :payload-format-indicator :value 1}]}
                :client-id "123"
                :will-props [{:name :payload-format-indicator :value 1}]}
-        encoded [(f/to-byte-buffer [0 4]) 
+        encoded [(f/to-byte-buffer [0 4])
                  (f/to-byte-buffer [\M \Q \T \T])
                  (f/to-byte-buffer [5])
                  (f/to-byte-buffer [118])
@@ -160,7 +160,89 @@
                  (f/to-byte-buffer [1 1])
                  (f/to-byte-buffer [0 3])
                  (f/to-byte-buffer [\1 \2 \3])
-                 (f/to-byte-buffer [2]) 
+                 (f/to-byte-buffer [2])
                  (f/to-byte-buffer [1 1])]]
     (is (= plain (io/decode connect-codec encoded)))))
 
+
+(comment
+  (deftest test-mqtt-connect
+    (let [plain {:fixed-header-first-byte {:packet-type :connect :flags 0}
+                 :variable-header-and-payload {:variable-header {:packet-type :connect
+                                                                 :protocol-name "MQTT"
+                                                                 :protocol-version 5
+                                                                 :connect-flags {:username false
+                                                                                 :password true
+                                                                                 :will-retain true
+                                                                                 :will-qos 2
+                                                                                 :will true
+                                                                                 :clean-start true
+                                                                                 :reserved false}
+                                                                 :keep-alive 300
+                                                                 :props [{:name :payload-format-indicator :value 1}]}
+                                               :client-id "123"
+                                               :will-props [{:name :payload-format-indicator :value 1}]}}]
+      (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+  (let [plain {:variable-header {:packet-type :connect
+                                 :protocol-name "MQTT"
+                                 :protocol-version 5
+                                 :connect-flags {:username false
+                                                 :password true
+                                                 :will-retain true
+                                                 :will-qos 2
+                                                 :will true
+                                                 :clean-start true
+                                                 :reserved false}
+                                 :keep-alive 300
+                                 :props [{:name :payload-format-indicator :value 1}]}
+               :client-id "123"
+               :will-props [{:name :payload-format-indicator :value 1}]}
+        encoded [(f/to-byte-buffer [0 4])
+                 (f/to-byte-buffer [\M \Q \T \T])
+                 (f/to-byte-buffer [5])
+                 (f/to-byte-buffer [118])
+                 (f/to-byte-buffer [1 44])
+                 (f/to-byte-buffer [2])
+                 (f/to-byte-buffer [1 1])
+                 (f/to-byte-buffer [0 3])
+                 (f/to-byte-buffer [\1 \2 \3])
+                 (f/to-byte-buffer [2])
+                 (f/to-byte-buffer [1 1])]]
+    (io/encode dummy plain)))
+
+(let [plain {
+             :first-byte {:packet-type :connect :flags 0}
+             :variable-header-and-payload {:variable-header {:packet-type :connect
+                                                             :protocol-name "MQTT"
+                                                             :protocol-version 5
+                                                             :connect-flags {:username false
+                                                                             :password true
+                                                                             :will-retain true
+                                                                             :will-qos 2
+                                                                             :will true
+                                                                             :clean-start true
+                                                                             :reserved false}
+                                                             :keep-alive 300
+                                                             :props [{:name :payload-format-indicator :value 1}]}
+                                           :client-id "123"
+                                           :will-props [{:name :payload-format-indicator :value 1}]}}]
+  (io/encode mqtt-codec plain))
+
+(def test-mqtt-codec-connect
+  (let [plain {:first-byte {:packet-type :connect :flags 0}
+               :variable-header-and-payload {:variable-header {:packet-type :connect
+                                                               :protocol-name "MQTT"
+                                                               :protocol-version 5
+                                                               :connect-flags {:username false
+                                                                               :password true
+                                                                               :will-retain true
+                                                                               :will-qos 2
+                                                                               :will true
+                                                                               :clean-start true
+                                                                               :reserved false}
+                                                               :keep-alive 300
+                                                               :props [{:name :payload-format-indicator :value 1}]}
+                                             :client-id "123"
+                                             :will-props [{:name :payload-format-indicator :value 1}]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))

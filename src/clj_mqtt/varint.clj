@@ -60,12 +60,14 @@
     protocols/Writer
     (sizeof [_] nil)
     (write-bytes [_ buf val]
+      (print "writer" val)
       (let [bs (map unchecked-byte (integer->variant val))]
         (if-not buf
-          (f/to-byte-buffer bs)
-          (corebytes/write-to-buf bs buf))))
+          (f/to-buf-seq (f/to-byte-buffer bs))
+          (corebytes/write-to-buf (f/to-byte-buffer bs) buf))))
         protocols/Reader
         (read-bytes [this buf-seq]
+            (print "reader")
             (let [buf-seq (db/dup-bytes buf-seq)]
               (loop [multiplier 1
                      encoded-byte (first-byte buf-seq)
