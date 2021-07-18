@@ -33,6 +33,7 @@
     (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [32])) (io/encode varint 32) ))
     (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [128 1]))   (io/encode varint 128)))
     (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [128 128 1])) (io/encode varint 16384)))
-    (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [128 128 128 1])) (io/encode varint 2097152)))))
+    (is (byte-streams/bytes= (f/to-byte-buffer (map unchecked-byte [128 128 128 1])) (io/encode varint 2097152)))
+    (is (= 1810 (io/decode varint (io/encode varint 1810))))))
 
   

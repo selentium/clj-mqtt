@@ -3,7 +3,11 @@
    [gloss.core.protocols :as protocols]
    [gloss.data.bytes :as db]
    [gloss.core.formats :as f]
-   [gloss.data.bytes.core :as corebytes]))
+   [gloss.data.bytes.core :as corebytes])
+  (:import
+   [java.nio
+    Buffer
+    ByteBuffer]))
 
 
 
@@ -48,7 +52,8 @@
 
 
 (defn first-byte [buf-seq]
-  (.get (first (db/take-bytes buf-seq 1))))
+  (let [buf ^ByteBuffer (first buf-seq)]
+    (.get buf (.position buf))))
 
 
 
@@ -60,14 +65,12 @@
     protocols/Writer
     (sizeof [_] nil)
     (write-bytes [_ buf val]
-      (print "writer" val)
       (let [bs (map unchecked-byte (integer->variant val))]
         (if-not buf
           (f/to-buf-seq (f/to-byte-buffer bs))
           (corebytes/write-to-buf (f/to-byte-buffer bs) buf))))
         protocols/Reader
         (read-bytes [this buf-seq]
-            (print "reader")
             (let [buf-seq (db/dup-bytes buf-seq)]
               (loop [multiplier 1
                      encoded-byte (first-byte buf-seq)
