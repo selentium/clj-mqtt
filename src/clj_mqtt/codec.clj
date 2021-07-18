@@ -243,27 +243,21 @@
                  :variable-header)))
 
 
-
+(def connack-codec 
+  (gloss/compile-frame
+   (gloss/ordered-map
+    :connect-acknowledge-flags (gloss/bit-map :zero 7 :session-present 1)
+    :reason-code reason-codes-codec
+    :props properties-codec)))
 
 
 ;;;mqtt codec
 
-(def packet-type->codec {:connect connect-codec})
+(def packet-type->codec {:connect connect-codec
+                         :connack connack-codec})
 
 
 
-
-
-
-
-
-
-
-(def everything-except-first-byte
-  (gloss/compile-frame 
-   (gloss/finite-frame :byte
-                       (gloss/ordered-map
-                        :variable-header-and-payload connect-codec))))
 
 
 (def mqtt-codec

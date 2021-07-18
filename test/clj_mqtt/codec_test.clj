@@ -177,6 +177,14 @@
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
 
+(deftest test-mqtt-codec-connack
+  (let [plain {:first-byte {:packet-type :connack :flags 0}
+               :variable-header-and-payload {:connect-acknowledge-flags {:zero 0 :session-present true}
+                                             :reason-code :success
+                                             :props [{:name :payload-format-indicator :value 1}]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
 
 
 
