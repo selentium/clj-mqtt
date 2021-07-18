@@ -155,7 +155,7 @@
                                  :keep-alive 300
                                  :props [{:name :payload-format-indicator :value 1}]}
                :client-id "123"}]
-    (is (= plain (io/decode connect-codec (io/encode connect-codec plain))))))
+    (is (= plain (io/decode (connect-codec nil) (io/encode (connect-codec nil) plain))))))
 
 
 

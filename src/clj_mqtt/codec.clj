@@ -232,7 +232,9 @@
 
 
 
-(def connect-codec
+
+
+(defn connect-codec [flags]
   (gloss/compile-frame
    (gloss/header connect-variable-header
                  (fn [header]
@@ -243,12 +245,15 @@
                  :variable-header)))
 
 
-(def connack-codec 
+
+(defn connack-codec [flags]
   (gloss/compile-frame
    (gloss/ordered-map
     :connect-acknowledge-flags (gloss/bit-map :zero 7 :session-present 1)
     :reason-code reason-codes-codec
     :props properties-codec)))
+
+
 
 
 ;;;mqtt codec
@@ -269,7 +274,7 @@
                      (gloss/finite-frame varint
                                          (gloss/ordered-map
                                           :first-byte first-byte
-                                          :variable-header-and-payload cd))))
+                                          :variable-header-and-payload (cd (:flags first-byte))))))
                  :first-byte)))
 
 
