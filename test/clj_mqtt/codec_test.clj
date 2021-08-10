@@ -218,6 +218,21 @@
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
 
+(deftest test-mqtt-codec-pubrec
+  (let [plain {:first-byte {:packet-type :pubrel :flags 0}
+               :variable-header-and-payload {:packet-identifier 1
+                                             :reason-code :success
+                                             :props [{:name :payload-format-indicator :value 1}]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+(deftest test-mqtt-codec-pubrec
+  (let [plain {:first-byte {:packet-type :pubcomp :flags 0}
+               :variable-header-and-payload {:packet-identifier 1
+                                             :reason-code :success
+                                             :props [{:name :payload-format-indicator :value 1}]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
 
 
 

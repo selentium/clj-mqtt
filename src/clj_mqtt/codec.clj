@@ -282,6 +282,8 @@
 
 
 (def pubrec-codec puback-codec)
+(def pubrel-codec puback-codec)
+(def pubcomp-codec puback-codec)
 
 
 ;;;mqtt codec
@@ -290,7 +292,9 @@
                          :connack connack-codec
                          :publish publish-codec
                          :puback puback-codec
-                         :pubrec pubrec-codec})
+                         :pubrec pubrec-codec
+                         :pubrel pubrel-codec
+                         :pubcomp pubcomp-codec})
 
 
 
