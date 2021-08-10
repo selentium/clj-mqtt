@@ -1,6 +1,7 @@
 (ns clj-mqtt.codec
   (:require
    [gloss.core :as gloss]
+   [gloss.core.codecs :as gloss-codecs]
    [clj-mqtt.varint :refer [varint]]))
 
 ;;;primitives
@@ -254,12 +255,32 @@
     :props properties-codec)))
 
 
+(defn publish-variable-header [qos]
+  (if (= qos 0)
+    (gloss/ordered-map :topic-name string :props properties-codec)
+    (gloss/ordered-map :topic-name string :props properties-codec :packet-identifier packet-identifier)))
+
+
+(defn publish-codec [flags]
+  (let [binary (Integer/toBinaryString flags) 
+        dup (= \1 (first binary))
+        retain (= \1 (last binary))
+        qos (Integer/parseInt (subs binary 1 3) 2)
+        variable-header (publish-variable-header qos)]
+    (gloss/ordered-map
+     :dup dup
+     :retain retain
+     :qos qos
+     :variable-header variable-header
+     :payload gloss-codecs/identity-codec)))
+
 
 
 ;;;mqtt codec
 
 (def packet-type->codec {:connect connect-codec
-                         :connack connack-codec})
+                         :connack connack-codec
+                         :publish publish-codec})
 
 
 

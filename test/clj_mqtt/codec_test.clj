@@ -5,6 +5,7 @@
             [gloss.core.formats :as f]
             [gloss.core :as gloss]
             [byte-streams :as bs]
+            [clojure.core.incubator :refer [dissoc-in]]
             [clj-mqtt.varint :refer [varint]]))
 
 
@@ -183,6 +184,23 @@
                                              :reason-code :success
                                              :props [{:name :payload-format-indicator :value 1}]}}]
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
+(defn =but [first second exclude]
+  (let [fst (dissoc-in first exclude)
+        snd (dissoc-in second exclude)]
+    (= fst snd)))
+
+(deftest test-mqtt-codec-publish
+  (let [plain {:first-byte {:packet-type :publish :flags 11}
+               :variable-header-and-payload {:dup true
+                                             :retain true
+                                             :qos 1
+                                             :variable-header {:topic-name "test-topic"
+                                                               :props [{:name :payload-format-indicator :value 1}]
+                                                               :packet-identifier 1}
+                                             :payload (f/to-byte-buffer "xxx")}}]
+    (is (=but plain (io/decode mqtt-codec (io/encode mqtt-codec plain)) [:variable-header-and-payload :payload]))))
 
 
 
