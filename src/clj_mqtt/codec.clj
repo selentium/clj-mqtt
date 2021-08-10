@@ -274,13 +274,20 @@
      :variable-header variable-header
      :payload gloss-codecs/identity-codec)))
 
+(defn puback-codec [flags]
+  (gloss/ordered-map
+   :packet-identifier packet-identifier
+   :reason-code reason-codes-codec
+   :props properties-codec))
+
 
 
 ;;;mqtt codec
 
 (def packet-type->codec {:connect connect-codec
                          :connack connack-codec
-                         :publish publish-codec})
+                         :publish publish-codec
+                         :puback puback-codec})
 
 
 

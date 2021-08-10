@@ -203,6 +203,14 @@
     (is (=but plain (io/decode mqtt-codec (io/encode mqtt-codec plain)) [:variable-header-and-payload :payload]))))
 
 
+(deftest test-mqtt-codec-puback
+  (let [plain {:first-byte {:packet-type :puback :flags 0}
+               :variable-header-and-payload {:packet-identifier 1
+                                             :reason-code :success
+                                             :props [{:name :payload-format-indicator :value 1}]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
 
 
 
