@@ -281,13 +281,16 @@
    :props properties-codec))
 
 
+(def pubrec-codec puback-codec)
+
 
 ;;;mqtt codec
 
 (def packet-type->codec {:connect connect-codec
                          :connack connack-codec
                          :publish publish-codec
-                         :puback puback-codec})
+                         :puback puback-codec
+                         :pubrec pubrec-codec})
 
 
 
