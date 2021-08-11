@@ -254,7 +254,12 @@
                                              :payload ["topic-name"]}}]
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
-
+(deftest test-mqtt-codec-unsuback
+  (let [plain {:first-byte {:packet-type :unsuback :flags 0}
+               :variable-header-and-payload {:packet-identifier 1
+                                             :props [{:name :payload-format-indicator :value 1}]
+                                             :payload [:success]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
 
 

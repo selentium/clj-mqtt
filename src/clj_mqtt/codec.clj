@@ -315,6 +315,13 @@
                       :payload (gloss/repeated string))))
 
 
+(defn unsuback-codec [flags]
+  (gloss/compile-frame
+   (gloss/ordered-map :packet-identifier packet-identifier
+                      :props properties-codec
+                      :payload (gloss/repeated reason-codes-codec))))
+
+
 ;;;mqtt codec
 
 (def packet-type->codec {:connect connect-codec
@@ -326,7 +333,8 @@
                          :pubcomp pubcomp-codec
                          :subscribe subscribe-codec
                          :suback suback-codec
-                         :unsubscribe unsubscribe-codec})
+                         :unsubscribe unsubscribe-codec
+                         :unsuback unsuback-codec})
 
 
 
