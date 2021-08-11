@@ -232,6 +232,13 @@
                                              :props [{:name :payload-format-indicator :value 1}]}}]
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
+(deftest test-mqtt-codec-subscribe 
+  (let [plain {:first-byte {:packet-type :subscribe :flags 0}
+               :variable-header-and-payload {:packet-identifier 1
+                                             :props [{:name :payload-format-indicator :value 1}]
+                                             :payload [{:topic-filter "topic-name" :subscription-options {:reserved 0 :retain-handling 1 :retain-as-published true :no-local true :qos 1}}]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
 
 
 

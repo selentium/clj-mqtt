@@ -285,6 +285,23 @@
 (def pubrel-codec puback-codec)
 (def pubcomp-codec puback-codec)
 
+(def subscribe-payload-item
+  (gloss/compile-frame
+   (gloss/ordered-map
+    :topic-filter string
+    :subscription-options (gloss/bit-map :reserved 2
+                                         :retain-handling 2
+                                         :retain-as-published 1
+                                         :no-local 1
+                                         :qos 2))))
+
+(defn subscribe-codec [flags]
+  (gloss/compile-frame
+   (gloss/ordered-map
+    :packet-identifier packet-identifier
+    :props properties-codec
+    :payload (gloss/repeated subscribe-payload-item))))
+
 
 ;;;mqtt codec
 
@@ -294,7 +311,8 @@
                          :puback puback-codec
                          :pubrec pubrec-codec
                          :pubrel pubrel-codec
-                         :pubcomp pubcomp-codec})
+                         :pubcomp pubcomp-codec
+                         :subscribe subscribe-codec})
 
 
 
