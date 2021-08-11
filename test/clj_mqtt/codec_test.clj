@@ -247,6 +247,14 @@
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
 
+(deftest test-mqtt-codec-unsubscribe
+  (let [plain {:first-byte {:packet-type :unsubscribe :flags 0}
+               :variable-header-and-payload {:packet-identifier 1
+                                             :props [{:name :payload-format-indicator :value 1}]
+                                             :payload ["topic-name"]}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
 
 
 

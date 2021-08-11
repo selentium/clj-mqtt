@@ -308,6 +308,12 @@
                       :props properties-codec
                       :payload (gloss/repeated reason-codes-codec))))
 
+(defn unsubscribe-codec [flags]
+  (gloss/compile-frame
+   (gloss/ordered-map :packet-identifier packet-identifier
+                      :props properties-codec
+                      :payload (gloss/repeated string))))
+
 
 ;;;mqtt codec
 
@@ -319,7 +325,8 @@
                          :pubrel pubrel-codec
                          :pubcomp pubcomp-codec
                          :subscribe subscribe-codec
-                         :suback suback-codec})
+                         :suback suback-codec
+                         :unsubscribe unsubscribe-codec})
 
 
 
