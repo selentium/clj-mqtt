@@ -302,6 +302,12 @@
     :props properties-codec
     :payload (gloss/repeated subscribe-payload-item))))
 
+(defn suback-codec [flags]
+  (gloss/compile-frame
+   (gloss/ordered-map :packet-identifier packet-identifier
+                      :props properties-codec
+                      :payload (gloss/repeated reason-codes-codec))))
+
 
 ;;;mqtt codec
 
@@ -312,7 +318,8 @@
                          :pubrec pubrec-codec
                          :pubrel pubrel-codec
                          :pubcomp pubcomp-codec
-                         :subscribe subscribe-codec})
+                         :subscribe subscribe-codec
+                         :suback suback-codec})
 
 
 
