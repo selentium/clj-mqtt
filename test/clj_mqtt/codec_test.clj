@@ -232,14 +232,14 @@
                                              :props [{:name :payload-format-indicator :value 1}]}}]
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
-(deftest test-mqtt-codec-subscribe 
+(deftest test-mqtt-codec-subscribe
   (let [plain {:first-byte {:packet-type :subscribe :flags 0}
                :variable-header-and-payload {:packet-identifier 1
                                              :props [{:name :payload-format-indicator :value 1}]
                                              :payload [{:topic-filter "topic-name" :subscription-options {:reserved 0 :retain-handling 1 :retain-as-published true :no-local true :qos 1}}]}}]
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
-(deftest test-mqtt-codec-suback 
+(deftest test-mqtt-codec-suback
   (let [plain {:first-byte {:packet-type :suback :flags 0}
                :variable-header-and-payload {:packet-identifier 1
                                              :props [{:name :payload-format-indicator :value 1}]
@@ -260,6 +260,23 @@
                                              :props [{:name :payload-format-indicator :value 1}]
                                              :payload [:success]}}]
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
+(deftest test-mqtt-codec-pingreq
+  (let [plain {:first-byte {:packet-type :pingreq :flags 0}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
+
+(deftest test-mqtt-codec-pingresp
+  (let [plain {:first-byte {:packet-type :pingresp :flags 0}}]
+    (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
+
+
+
+
 
 
 

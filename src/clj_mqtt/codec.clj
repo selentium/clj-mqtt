@@ -1,6 +1,7 @@
 (ns clj-mqtt.codec
   (:require
    [gloss.core :as gloss]
+   [gloss.io :as io]
    [gloss.core.codecs :as gloss-codecs]
    [clj-mqtt.varint :refer [varint]]))
 
@@ -38,7 +39,7 @@
                        [:unsubscribe 10 :client-server]
                        [:unsuback 11 :server-client]
                        [:pingreq 12 :client-server]
-                       [:pingresp 12 :server-client]
+                       [:pingresp 13 :server-client]
                        [:disconnect 14 :both]
                        [:auth 15 :both]])
 
@@ -321,6 +322,14 @@
                       :props properties-codec
                       :payload (gloss/repeated reason-codes-codec))))
 
+(defn pingreq-codec [flags]
+  (gloss/compile-frame
+   gloss/nil-frame))
+
+(defn pingresp-codec [flags]
+   (gloss/compile-frame
+    gloss/nil-frame))
+
 
 ;;;mqtt codec
 
@@ -334,13 +343,15 @@
                          :subscribe subscribe-codec
                          :suback suback-codec
                          :unsubscribe unsubscribe-codec
-                         :unsuback unsuback-codec})
+                         :unsuback unsuback-codec
+                         :pingreq pingreq-codec
+                         :pingresp pingresp-codec})
 
 
 
 
 
-(def mqtt-codec
+(def mqtt-codec2
   (gloss/compile-frame
    (gloss/header fixed-header-first-byte
                  (fn [first-byte]
@@ -351,6 +362,26 @@
                                           :first-byte first-byte
                                           :variable-header-and-payload (cd (:flags first-byte))))))
                  :first-byte)))
+
+
+(def mqtt-codec
+  (gloss/compile-frame
+   (gloss/header fixed-header-first-byte
+                 (fn [first-byte]
+                   (let [pt (:packet-type first-byte)
+                         cd (pt packet-type->codec)
+                         empty-packet-types #{:pingreq :pingresp}]
+                     (if (contains? empty-packet-types pt)
+                       (gloss/ordered-map :first-byte first-byte)
+                       (gloss/finite-frame varint
+                                           (gloss/ordered-map
+                                            :first-byte first-byte
+                                            :variable-header-and-payload (cd (:flags first-byte)))))))
+                 :first-byte)))
+
+
+
+
 
 
 
