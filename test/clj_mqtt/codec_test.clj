@@ -272,6 +272,18 @@
   (let [plain {:first-byte {:packet-type :pingresp :flags 0}}]
     (is (= plain (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
+(deftest test-mqtt-codec-disconnect
+  (let [plain {:first-byte {:packet-type :disconnect :flags 0}
+               :variable-header-and-payload {:reason-code :success 
+                                             :props [{:name :payload-format-indicator :value 1}]}}]
+    (is (= plain  (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
+
+
+(deftest test-mqtt-codec-auth
+  (let [plain {:first-byte {:packet-type :auth :flags 0}
+               :variable-header-and-payload {:reason-code :success
+                                             :props [{:name :payload-format-indicator :value 1}]}}]
+    (is (= plain  (io/decode mqtt-codec (io/encode mqtt-codec plain))))))
 
 
 

@@ -330,6 +330,18 @@
    (gloss/compile-frame
     gloss/nil-frame))
 
+(defn disconnect-codec [flags]
+  (gloss/compile-frame
+   (gloss/ordered-map :reason-code reason-codes-codec
+                      :props properties-codec)))
+
+(defn auth-codec [_]
+  (gloss/compile-frame
+   (gloss/ordered-map :reason-code reason-codes-codec
+                      :props properties-codec)))
+
+
+
 
 ;;;mqtt codec
 
@@ -345,23 +357,13 @@
                          :unsubscribe unsubscribe-codec
                          :unsuback unsuback-codec
                          :pingreq pingreq-codec
-                         :pingresp pingresp-codec})
+                         :pingresp pingresp-codec
+                         :disconnect disconnect-codec
+                         :auth auth-codec})
 
 
 
 
-
-(def mqtt-codec2
-  (gloss/compile-frame
-   (gloss/header fixed-header-first-byte
-                 (fn [first-byte]
-                   (let [pt (:packet-type first-byte)
-                         cd (pt packet-type->codec)]
-                     (gloss/finite-frame varint
-                                         (gloss/ordered-map
-                                          :first-byte first-byte
-                                          :variable-header-and-payload (cd (:flags first-byte))))))
-                 :first-byte)))
 
 
 (def mqtt-codec
